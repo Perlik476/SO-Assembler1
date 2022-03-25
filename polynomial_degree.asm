@@ -42,6 +42,8 @@ array_all_zeros:
     mov rax, rsp
 
 move_array:
+    push rcx
+
     mov r8d, [rdi]
     movsx r10, r8d
     mov [rax], r10
@@ -66,10 +68,11 @@ non_negative:
     lea rax, [rax + 8 * r9]
     lea rdi, [rdi + 4]
 
+    pop rcx
     loop move_array
 
     mov rax, rsp
-    ; add rax, 8
+    add rax, 56
     mov rax, [rax]
 
     add rsp, [rel array_size]
