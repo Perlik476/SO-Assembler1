@@ -37,9 +37,28 @@ array_all_zeros:
     cmp rax, [rel stack_array_pointer]
     jne array_all_zeros
 
+    mov rcx, [rel n]
+    mov r9, [rel number_of_segments]
+    mov rax, rsp
+
+move_array:
+    mov r8d, [rdi]
+    mov [rax], r8d
+
+    lea rax, [rax + 8 * r9]
+    lea rdi, [rdi + 4]
+
+    loop move_array
+
+    ; mov QWORD [rax], 0
+    ; sub rax, 32
 
     ; mov rax, [rel n]
     ; mov rax, [rdi + 4]
-    add rsp, [rel array_size]
+    mov rax, rsp
+    ; add rax, 16
     mov rax, [rax]
+
+
+    add rsp, [rel array_size]
     ret
