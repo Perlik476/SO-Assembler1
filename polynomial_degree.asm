@@ -43,22 +43,34 @@ array_all_zeros:
 
 move_array:
     mov r8d, [rdi]
-    mov [rax], r8d
+    movsx r10, r8d
+    mov [rax], r10
 
+    cmp QWORD [rax], 0
+    jge non_negative
+
+    cmp QWORD [rel number_of_segments], 1
+    je non_negative
+
+    mov rdx, rax
+    lea rdx, [rdx + 8]
+    mov rcx, [rel number_of_segments]
+    sub rcx, 1
+
+negative_loop:
+    mov QWORD [rdx], -1
+    lea rdx, [rdx + 8]
+    loop negative_loop
+
+non_negative:
     lea rax, [rax + 8 * r9]
     lea rdi, [rdi + 4]
 
     loop move_array
 
-    ; mov QWORD [rax], 0
-    ; sub rax, 32
-
-    ; mov rax, [rel n]
-    ; mov rax, [rdi + 4]
     mov rax, rsp
-    ; add rax, 16
+    ; add rax, 8
     mov rax, [rax]
-
 
     add rsp, [rel array_size]
     ret
