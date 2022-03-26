@@ -82,22 +82,45 @@ non_negative:
     mov r11, [rel number_of_segments_times_8]
     lea r10, [rax + r11]
     mov rcx, r9
+    mov rsi, 0
     cmp rcx, 0
     je end
 
 substract:
     mov rdx, [r10]
-    sbb QWORD [rax], rdx
+    sub QWORD [rax], rdx ; TODO sbb
     lea rax, [rax + 8]
     lea r10, [r10 + 8]
 
     loop substract
 
+    mov rax, rsp
+    mov rcx, r9
+check_zeros_array:
+    cmp QWORD [rax], 0
+    jne non_zero
+    lea rax, [rax + 8]
+    loop check_zeros_array
+    jmp end
+
+non_zero:
+    sub r9, [rel number_of_segments]
+    mov rcx, r9
+    cmp rcx, 0
+    je end
+    ; cmp rsi, 0
+    ; je end
+    mov rax, rsp
+    lea r10, [rax + r11]
+    lea rsi, [rsi + 1]
+    jmp substract
+
 end:
 
-    mov rax, rsp
-    add rax, 8
-    mov rax, [rax]
+    ; mov rax, rsp
+    ; add rax, 8
+    ; mov rax, [rax]
+    mov rax, rsi
 
     add rsp, [rel array_size]
     ret
