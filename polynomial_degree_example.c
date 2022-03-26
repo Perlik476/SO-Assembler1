@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <assert.h>
 
 // Testowana funkcja w asemblerze
 int polynomial_degree(int const *y, size_t n);
@@ -29,6 +30,11 @@ static const int poly6[] = {
   1, -1, 1, -1, 1, -1};
 static const int degree6 = 65;
 
+#define test(n, ans, y...) { \
+	int tab[n] = y; \
+  printf("result: %d, expected: %d\n", polynomial_degree(tab, n), ans); \
+}
+
 #define TEST(t) {poly##t, SIZE(poly##t), degree##t}
 #define SIZE(x) (sizeof (x) / sizeof (x)[0])
 
@@ -56,4 +62,8 @@ int main() {
     else
       printf("test %zu failed with result %d\n", test, d);
   }
+
+  // test(35, 13, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14, 105, 560, 2380, 8568, 27132, 77520, 203490, 497420, 1144066, 2496144, 5200300, 10400600, 20058300, 37442160, 67863915, 119759850, 206253075, 347373600, 573166440, 927983760, 1476337800});
+  test(32, 18, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 190, 1330, 7315, 33649, 134596, 480700, 1562275, 4686825, 13123110, 34597290, 86493225, 206253075, 471435600, 1037158320});
+  test(32, 20, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 21, 231, 1771, 10626, 53130, 230230, 888030, 3108105, 10015005, 30045015, 84672315, 225792840, 573166440, 1391975640})
 }
