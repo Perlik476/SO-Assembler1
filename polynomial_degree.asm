@@ -75,16 +75,22 @@ non_negative:
 
     mov rax, [rel number_of_segments]
     mul QWORD [rel n]
-    sub rax, [rel number_of_segments]
+    ; sub rax, [rel number_of_segments]
     mov r9, rax
 
     mov rax, rsp
     mov r11, [rel number_of_segments_times_8]
     lea r10, [rax + r11]
     mov rcx, r9
-    mov rsi, 0
+    mov rsi, -1
+
+    ; mov rax, rcx
+    ; add rsp, [rel array_size]
+    ; ret
+
     cmp rcx, 0
     je end
+    jmp check_zeros_array
 
 substract:
     mov rdx, [r10]
@@ -106,17 +112,16 @@ check_zeros_array:
 non_zero:
     sub r9, [rel number_of_segments]
     mov rcx, r9
+    lea rsi, [rsi + 1]
     cmp rcx, 0
     je end
     ; cmp rsi, 0
     ; je end
     mov rax, rsp
     lea r10, [rax + r11]
-    lea rsi, [rsi + 1]
     jmp substract
 
 end:
-
     ; mov rax, rsp
     ; add rax, 8
     ; mov rax, [rax]
