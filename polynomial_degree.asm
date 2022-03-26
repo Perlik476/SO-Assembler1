@@ -4,6 +4,7 @@ section .bss
 
 n:      resq 1
 number_of_segments: resq 1
+number_of_segments_times_8: resq 1
 stack_array_pointer: resq 1
 mem_array_pointer: resq 1
 array_size: resq 1
@@ -23,9 +24,10 @@ polynomial_degree:
 
     mov [rel stack_array_pointer], rsp
     mov rax, [rel number_of_segments]
-    mul QWORD [rel n]
     mov rcx, 8
     mul rcx
+    mov [rel number_of_segments_times_8], rax
+    mul QWORD [rel n]
     mov [rel array_size], rax
     sub rsp, rax
     mov rax, rsp
@@ -71,8 +73,30 @@ non_negative:
     pop rcx
     loop move_array
 
+    mov rax, [rel number_of_segments]
+    mul QWORD [rel n]
+    sub rax, [rel number_of_segments]
+    mov r9, rax
+
     mov rax, rsp
-    add rax, 56
+    mov r11, [rel number_of_segments_times_8]
+    lea r10, [rax + r11]
+    mov rcx, r9
+    cmp rcx, 0
+    je end
+
+substract:
+    mov rdx, [r10]
+    sbb QWORD [rax], rdx
+    lea rax, [rax + 8]
+    lea r10, [r10 + 8]
+
+    loop substract
+
+end:
+
+    mov rax, rsp
+    add rax, 8
     mov rax, [rax]
 
     add rsp, [rel array_size]
