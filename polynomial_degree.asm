@@ -5,9 +5,8 @@ section .bss
 n:      resq 1
 number_of_segments: resq 1
 number_of_segments_times_8: resq 1
-stack_array_pointer: resq 1
-mem_array_pointer: resq 1
-array_size: resq 1
+array_size_bytes: resq 1
+array_size_bites: resq 1
 
 section .text
 
@@ -15,29 +14,27 @@ polynomial_degree:
     ; tablica y w rdi, rozmiar tablicy n w rsi
     mov eax, esi
     mov [rel n], eax
-    mov [rel mem_array_pointer], rdi
 
     lea rax, [rax + 32]
     shr rax, 6
     lea rax, [rax + 1]
     mov [rel number_of_segments], rax
 
-    mov [rel stack_array_pointer], rsp
     mov rax, [rel number_of_segments]
-    mov rcx, 8
-    mul rcx
+    shl rax, 3
     mov [rel number_of_segments_times_8], rax
     mul QWORD [rel n]
-    mov [rel array_size], rax
-    sub rsp, rax
+    mov [rel array_size_bites], rax
+    shr rax, 3
+    mov [rel array_size_bytes], rax
+    sub rsp, [rel array_size_bites]
     mov rax, rsp
-    ; lea rsp, [rsp + 8 * rax]
+    mov rcx, [rel array_size_bytes]
 
 array_all_zeros:  
     mov QWORD [rax], 0
     lea rax, [rax + 8]
-    cmp rax, [rel stack_array_pointer]
-    jne array_all_zeros
+    loop array_all_zeros
 
     mov rcx, [rel n]
     mov r9, [rel number_of_segments]
@@ -75,7 +72,6 @@ non_negative:
 
     mov rax, [rel number_of_segments]
     mul QWORD [rel n]
-    ; sub rax, [rel number_of_segments]
     mov r9, rax
 
     mov r11, [rel number_of_segments_times_8]
@@ -83,7 +79,6 @@ non_negative:
     mov rcx, r9
     mov rsi, -1
     mov rdi, [rel n]
-    ; sub rdi, 1
 
     mov rax, rdi
     mul QWORD [rel number_of_segments]
@@ -91,14 +86,9 @@ non_negative:
 
     mov rax, rsp
 
-    ; mov rax, rcx
-    ; add rsp, [rel array_size]
-    ; ret
-
-    ; jmp end
     cmp rcx, 0
     je end
-    ; lea rcx, [rcx + rcx]
+
     jmp check_zeros_array
 
 subtract:
@@ -123,15 +113,10 @@ check_zeros_array:
     cmp QWORD [rax], 0
     jne non_zero
     lea rax, [rax + 8]
-    ; cmp rcx, 32
-    ; je end
     loop check_zeros_array
     jmp end
 
 non_zero:
-    ; cmp rsi, 1
-    je end
-
     sub r9, [rel number_of_segments]
     sub rdi, 1
     mov rcx, rdi
@@ -143,11 +128,7 @@ non_zero:
     jmp subtract
 
 end:
-    ; mov rax, rsp
-    ; add rax, 16
-    ; mov rax, [rax]
     mov rax, rsi
-    ; mov rax, rcx
 
-    add rsp, [rel array_size]
+    add rsp, [rel array_size_bites]
     ret
