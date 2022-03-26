@@ -98,7 +98,7 @@ non_negative:
     ; jmp end
     cmp rcx, 0
     je end
-    lea rcx, [rcx + rcx]
+    ; lea rcx, [rcx + rcx]
     jmp check_zeros_array
 
 subtract:
@@ -130,7 +130,7 @@ check_zeros_array:
 
 non_zero:
     ; cmp rsi, 1
-    ; je end
+    je end
 
     sub r9, [rel number_of_segments]
     sub rdi, 1
