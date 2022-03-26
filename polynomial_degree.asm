@@ -4,14 +4,12 @@ section .bss
 
 n: resq 1
 number_of_segments: resq 1
-number_of_segments_times_8: resq 1
 array_size_bytes: resq 1
 array_size_bites: resq 1
 
 section .text
 
-polynomial_degree:
-    ; tablica y w rdi, rozmiar tablicy n w rsi
+polynomial_degree: ; tablica y w rdi, rozmiar tablicy n w rsi
     mov eax, esi
     mov [rel n], eax
 
@@ -23,16 +21,16 @@ polynomial_degree:
 
     mov rax, [rel number_of_segments]
     shl rax, 3
-    mov [rel number_of_segments_times_8], rax
     mul QWORD [rel n]
     mov [rel array_size_bites], rax
     shr rax, 3
     mov [rel array_size_bytes], rax
-    sub rsp, [rel array_size_bites]
+
+    sub rsp, [rel array_size_bites] ; zajmujemy miejsce na tablicę liczb na stosie
     mov rax, rsp
     mov rcx, [rel array_size_bytes]
 
-array_all_zeros:  
+array_all_zeros: ; zerujemy tablicę
     mov QWORD [rax], 0
     lea rax, [rax + 8]
     loop array_all_zeros
@@ -41,7 +39,7 @@ array_all_zeros:
     mov r9, [rel number_of_segments]
     mov rax, rsp
 
-move_array:
+move_array: ; przenosimy zawartość tablicy y w odpowiednie miejsca utworzonej tablicy
     push rcx
 
     mov r8d, [rdi]
@@ -49,31 +47,33 @@ move_array:
     mov [rax], r10
 
     cmp QWORD [rax], 0
-    jge non_negative
+    jge move_array_next_step
 
     lea rdx, [rax + 8]
     mov rcx, [rel number_of_segments]
     sub rcx, 1
-    jz non_negative
+    jz move_array_next_step
 
-negative_loop:
+negative_loop: ; jeśli liczba jest ujemna, to bity w pozostałych segmentach odpowiadających tej liczbie trzeba ustawić na same jedynki
     mov QWORD [rdx], -1
     lea rdx, [rdx + 8]
     loop negative_loop
 
-non_negative:
+move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzamy pętlę
     lea rax, [rax + 8 * r9]
     lea rdi, [rdi + 4]
 
     pop rcx
     loop move_array
 
-    mov r9, [rel array_size_bytes]
+    mov r9, [rel array_size_bytes] ; aktualny rozmiar tablicy, w kolejnych iteracjach będzie się zmniejszać o tyle, ile miejsca zajmuje jedna liczba w tablicy, tj. number_of_segments
 
-    mov r11, [rel number_of_segments_times_8]
+    mov r11, [rel number_of_segments]
+    shl r11, 3
     lea r10, [r9 + r11]
+
     mov rcx, r9
-    mov rsi, -1
+    mov rsi, -1 ; wynikowy stopień wielomianu
     mov rdi, [rel n]
 
     mov rax, rdi
