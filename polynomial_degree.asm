@@ -83,6 +83,9 @@ non_negative:
     lea r10, [rax + r11]
     mov rcx, r9
     mov rsi, -1
+    mov rdi, [rel n]
+    ; sub rdi, 1
+    mov rcx, rdi
 
     ; mov rax, rcx
     ; add rsp, [rel array_size]
@@ -92,13 +95,21 @@ non_negative:
     je end
     jmp check_zeros_array
 
-substract:
+subtract:
+    push rcx
+    mov rcx, [rel number_of_segments]
+    clc
+
+subtract_two:
     mov rdx, [r10]
-    sub QWORD [rax], rdx ; TODO sbb
+    sbb QWORD [rax], rdx
     lea rax, [rax + 8]
     lea r10, [r10 + 8]
 
-    loop substract
+    loop subtract_two
+
+    pop rcx
+    loop subtract
 
     mov rax, rsp
     mov rcx, r9
@@ -110,20 +121,22 @@ check_zeros_array:
     jmp end
 
 non_zero:
+    ; cmp rsi, 1
+    ; je end
+
     sub r9, [rel number_of_segments]
-    mov rcx, r9
+    sub rdi, 1
+    mov rcx, rdi
     lea rsi, [rsi + 1]
     cmp rcx, 0
     je end
-    ; cmp rsi, 0
-    ; je end
     mov rax, rsp
     lea r10, [rax + r11]
-    jmp substract
+    jmp subtract
 
 end:
     ; mov rax, rsp
-    ; add rax, 8
+    ; add rax, 16
     ; mov rax, [rax]
     mov rax, rsi
 
