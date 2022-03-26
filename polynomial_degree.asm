@@ -2,7 +2,7 @@ global polynomial_degree
 
 section .bss
 
-n:      resq 1
+n: resq 1
 number_of_segments: resq 1
 number_of_segments_times_8: resq 1
 array_size_bytes: resq 1
@@ -15,6 +15,7 @@ polynomial_degree:
     mov eax, esi
     mov [rel n], eax
 
+    ; potrzeba do (n + 32) bitów do zapisu liczb, number_of_segments to liczba 64-bitowych segmentów, która mieści (n + 32) bity.
     lea rax, [rax + 32]
     shr rax, 6
     lea rax, [rax + 1]
@@ -50,13 +51,10 @@ move_array:
     cmp QWORD [rax], 0
     jge non_negative
 
-    cmp QWORD [rel number_of_segments], 1
-    je non_negative
-
-    mov rdx, rax
-    lea rdx, [rdx + 8]
+    lea rdx, [rax + 8]
     mov rcx, [rel number_of_segments]
     sub rcx, 1
+    jz non_negative
 
 negative_loop:
     mov QWORD [rdx], -1
@@ -70,12 +68,10 @@ non_negative:
     pop rcx
     loop move_array
 
-    mov rax, [rel number_of_segments]
-    mul QWORD [rel n]
-    mov r9, rax
+    mov r9, [rel array_size_bytes]
 
     mov r11, [rel number_of_segments_times_8]
-    lea r10, [rax + r11]
+    lea r10, [r9 + r11]
     mov rcx, r9
     mov rsi, -1
     mov rdi, [rel n]
@@ -109,6 +105,7 @@ subtract_two:
 
     mov rax, rsp
     mov rcx, r9
+    
 check_zeros_array:
     cmp QWORD [rax], 0
     jne non_zero
