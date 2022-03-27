@@ -4,7 +4,6 @@ section .bss
 
 n: resq 1
 number_of_segments: resq 1
-array_size_bytes: resq 1
 array_size_bites: resq 1
 
 section .text
@@ -24,11 +23,11 @@ polynomial_degree: ; tablica y w rdi, rozmiar tablicy n w rsi
     mul QWORD [rel n]
     mov [rel array_size_bites], rax
     shr rax, 3
-    mov [rel array_size_bytes], rax
+    mov r9, rax ; w r9 będzie trzymany rozmiar nowo utworzonej tablicy na stosie w bajtach
 
     sub rsp, [rel array_size_bites] ; zajmujemy miejsce na tablicę liczb na stosie
     mov rax, rsp
-    mov rcx, [rel array_size_bytes]
+    mov rcx, r9
 
 array_all_zeros: ; zerujemy tablicę
     mov QWORD [rax], 0
@@ -70,7 +69,7 @@ move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzam
     ; etap ustawiania początkowych wartości w tablicy zakończony
     ; teraz będziemy w pętli odejmowali sąsiedznie liczby w tablicy, w każdym kroku uznając, że jej rozmiar zmniejsza się o jedną liczbę. 
 
-    mov r9, [rel array_size_bytes] ; aktualny rozmiar tablicy, w kolejnych iteracjach będzie się zmniejszać o tyle, ile miejsca zajmuje jedna liczba w tablicy, tj. number_of_segments
+    ; w r9 jest aktualny rozmiar tablicy w bajtach, w kolejnych iteracjach będzie się zmniejszać o tyle, ile miejsca zajmuje jedna liczba w tablicy, tj. number_of_segments
 
     ; w r11 jest aktualnie number_of_segments, więc 8 * r11 jest wartością, o którą trzeba przesunąć wskaźnik, by dostać się do kolejnej liczby w tablicy
     lea r10, [r9 + 8 * r11]
@@ -79,7 +78,7 @@ move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzam
     mov rdi, [rel n] ; w rdi będzie trzymany aktualny rozmiar tablicy, tzn. liczba liczb, które mają w niej swoją reprezentację
 
     mov rax, rsp ; ustawiamy rax na początek tablicy ze stosu
-    mov rcx, [rel array_size_bytes]
+    mov rcx, r9
 
     jmp check_zeros_array ; na początek chcemy sprawdzić, czy tablica zawiera same zera
 
