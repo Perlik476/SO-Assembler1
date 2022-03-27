@@ -36,17 +36,18 @@ array_all_zeros: ; zerujemy tablicę
     loop array_all_zeros
 
     mov rcx, [rel n]
-    mov r9, [rel number_of_segments]
+    mov r11, [rel number_of_segments]
     mov rax, rsp
 
 move_array: ; przenosimy zawartość tablicy y w odpowiednie miejsca utworzonej tablicy
     push rcx
 
+    ; przenosimy liczbę z tablicy y do pierwszego segmentu odpowiedniego miejsca w tablicy na stosie
     mov r8d, [rdi]
     movsx r10, r8d
     mov [rax], r10
 
-    cmp QWORD [rax], 0
+    cmp QWORD [rax], 0 ; jeśli wartość liczby jest dodatnia, to nie trzeba zmieniać pozostałych segmentów odpowiadających za tę liczbę
     jge move_array_next_step
 
     lea rdx, [rax + 8]
@@ -60,7 +61,7 @@ negative_loop: ; jeśli liczba jest ujemna, to bity w pozostałych segmentach od
     loop negative_loop
 
 move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzamy pętlę
-    lea rax, [rax + 8 * r9]
+    lea rax, [rax + 8 * r11]
     lea rdi, [rdi + 4]
 
     pop rcx
@@ -68,17 +69,16 @@ move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzam
 
     mov r9, [rel array_size_bytes] ; aktualny rozmiar tablicy, w kolejnych iteracjach będzie się zmniejszać o tyle, ile miejsca zajmuje jedna liczba w tablicy, tj. number_of_segments
 
-    mov r11, [rel number_of_segments]
-    shl r11, 3
-    lea r10, [r9 + r11]
+    ; w r11 jest aktualnie number_of_segments, więc 8 * r11 jest wartością, o którą trzeba przesunąć wskaźnik, by dostać się do kolejnej liczby w tablicy
+    lea r10, [r9 + 8 * r11]
 
     mov rcx, r9
-    mov rsi, -1 ; wynikowy stopień wielomianu
+    mov rsi, -1 ; w rsi będzie trzymany wynikowy stopień wielomianu
     mov rdi, [rel n]
 
     mov rax, rdi
     mul QWORD [rel number_of_segments]
-    mov rcx, rax    
+    mov rcx, rax
 
     mov rax, rsp
 
@@ -121,7 +121,7 @@ non_zero:
     cmp rcx, 0
     je end
     mov rax, rsp
-    lea r10, [rax + r11]
+    lea r10, [rax + 8 * r11]
     jmp subtract
 
 end:
