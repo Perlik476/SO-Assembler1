@@ -90,7 +90,8 @@ subtract:
 
 subtract_two:
     mov rdx, [r10]
-    sbb QWORD [rax], rdx
+    sbb QWORD [rax], rdx ; odejmowanie odpowiadających sobie segmentów sąsiednich liczb z uwzględnieniem flagi przeniesienia
+
     lea rax, [rax + 8]
     lea r10, [r10 + 8]
 
@@ -99,8 +100,8 @@ subtract_two:
     pop rcx
     loop subtract
 
-    mov rax, rsp
-    mov rcx, r9
+    mov rax, rsp ; powrót do początku tablicy
+    mov rcx, r9 ; rozmiar aktualnej tablicy
     
 check_zeros_array: ; sprawdza w pętli, czy tablica składa się z samych zer
     cmp QWORD [rax], 0
@@ -124,7 +125,7 @@ non_zero: ; tablica zawiera niezerowy element, trzeba odjąć sąsiednie liczby 
     jmp subtract
 
 end:
-    mov rax, rsi
+    mov rax, rsi ; przenosimy wynik do rax
 
-    add rsp, [rel array_size_bites]
+    add rsp, [rel array_size_bites] ; zwalniamy stos
     ret
