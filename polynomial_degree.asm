@@ -1,29 +1,20 @@
 global polynomial_degree
 
-section .bss
-
 ; stałe w rejestrach, które zostaną ustawione po początkowym etapie:
 ; r8 - rozmiar utworzonej tablicy do przechowywania dużych liczb w bitach
 ; r9 - rozmiar utworzonej tablicy do przechowywania dużych liczb w bajtach
 ; r11 - liczba segmentów 64-bitowych, które reprezentują jedną liczbę
 
-n:  resq 1
-
-section .text
-
 polynomial_degree: ; tablica y w rdi, rozmiar tablicy n w rsi
-        mov     eax, esi
-        mov     [rel n], eax
-
         ; potrzeba do (n + 32) bitów do zapisu liczb, r11 to liczba 64-bitowych segmentów, która mieści (n + 32) bity.
-        lea     rax, [rax + 32]
+        lea     rax, [rsi + 32]
         shr     rax, 6
         lea     rax, [rax + 1]
         mov     r11, rax
 
         mov     rax, r11
         shl     rax, 3
-        mul     QWORD [rel n]
+        mul     rsi
         mov     r8, rax
         shr     rax, 3
         mov     r9, rax
@@ -37,15 +28,15 @@ array_all_zeros: ; zerujemy tablicę
         lea     rax, [rax + 8]
         loop    array_all_zeros
 
-        mov     rcx, [rel n]
+        mov     rcx, rsi
         mov     rax, rsp
 
 move_array: ; przenosimy zawartość tablicy y w odpowiednie miejsca utworzonej tablicy
         push    rcx
 
         ; przenosimy liczbę z tablicy y do pierwszego segmentu odpowiedniego miejsca w tablicy na stosie
-        mov     esi, [rdi]
-        movsx   r10, esi
+        mov     edx, [rdi]
+        movsx   r10, edx
         mov     [rax], r10
 
         cmp     QWORD [rax], 0 ; jeśli wartość liczby jest dodatnia, to nie trzeba zmieniać pozostałych segmentów odpowiadających za tę liczbę
@@ -76,9 +67,9 @@ move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzam
         ; w r11 jest aktualnie liczba segmentów, z której składa się liczba, więc 8 * r11 jest wartością, o którą trzeba przesunąć wskaźnik, by dostać się do kolejnej liczby w tablicy
         lea     r10, [r9 + 8 * r11]
 
+        mov     rdi, rsi ; w rdi będzie trzymany aktualny rozmiar tablicy, tzn. liczba liczb, które mają w niej swoją reprezentację
         mov     rsi, -1 ; w rsi będzie trzymany wynikowy stopień wielomianu
-        mov     rdi, [rel n] ; w rdi będzie trzymany aktualny rozmiar tablicy, tzn. liczba liczb, które mają w niej swoją reprezentację
-
+        
         mov     rax, rsp ; ustawiamy rax na początek tablicy ze stosu
         mov     rcx, r9
 
