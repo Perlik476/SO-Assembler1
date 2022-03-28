@@ -2,9 +2,12 @@ global polynomial_degree
 
 section .bss
 
-n:                  resq 1
-number_of_segments: resq 1
-array_size_bites:   resq 1
+; stałe w rejestrach, które zostaną ustawione po początkowym etapie:
+; r8 - rozmiar utworzonej tablicy do przechowywania dużych liczb w bitach
+; r9 - rozmiar utworzonej tablicy do przechowywania dużych liczb w bajtach
+; r11 - liczba segmentów 64-bitowych, które reprezentują jedną liczbę
+
+n:  resq 1
 
 section .text
 
@@ -12,20 +15,20 @@ polynomial_degree: ; tablica y w rdi, rozmiar tablicy n w rsi
         mov     eax, esi
         mov     [rel n], eax
 
-        ; potrzeba do (n + 32) bitów do zapisu liczb, number_of_segments to liczba 64-bitowych segmentów, która mieści (n + 32) bity.
+        ; potrzeba do (n + 32) bitów do zapisu liczb, r11 to liczba 64-bitowych segmentów, która mieści (n + 32) bity.
         lea     rax, [rax + 32]
         shr     rax, 6
         lea     rax, [rax + 1]
-        mov     [rel number_of_segments], rax
+        mov     r11, rax
 
-        mov     rax, [rel number_of_segments]
+        mov     rax, r11
         shl     rax, 3
         mul     QWORD [rel n]
-        mov     [rel array_size_bites], rax
+        mov     r8, rax
         shr     rax, 3
-        mov     r9, rax ; w r9 będzie trzymany rozmiar nowo utworzonej tablicy na stosie w bajtach
+        mov     r9, rax
 
-        sub     rsp, [rel array_size_bites] ; zajmujemy miejsce na tablicę liczb na stosie
+        sub     rsp, r8 ; zajmujemy miejsce na tablicę liczb na stosie
         mov     rax, rsp
         mov     rcx, r9
 
@@ -35,22 +38,21 @@ array_all_zeros: ; zerujemy tablicę
         loop    array_all_zeros
 
         mov     rcx, [rel n]
-        mov     r11, [rel number_of_segments]
         mov     rax, rsp
 
 move_array: ; przenosimy zawartość tablicy y w odpowiednie miejsca utworzonej tablicy
         push    rcx
 
         ; przenosimy liczbę z tablicy y do pierwszego segmentu odpowiedniego miejsca w tablicy na stosie
-        mov     r8d, [rdi]
-        movsx   r10, r8d
+        mov     esi, [rdi]
+        movsx   r10, esi
         mov     [rax], r10
 
         cmp     QWORD [rax], 0 ; jeśli wartość liczby jest dodatnia, to nie trzeba zmieniać pozostałych segmentów odpowiadających za tę liczbę
         jge     move_array_next_step
 
         lea     rdx, [rax + 8]
-        mov     rcx, [rel number_of_segments]
+        mov     rcx, r11
         sub     rcx, 1
         jz move_array_next_step
 
@@ -69,9 +71,9 @@ move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzam
         ; etap ustawiania początkowych wartości w tablicy zakończony
         ; teraz będziemy w pętli odejmowali sąsiedznie liczby w tablicy, w każdym kroku uznając, że jej rozmiar zmniejsza się o jedną liczbę. 
 
-        ; w r9 jest aktualny rozmiar tablicy w bajtach, w kolejnych iteracjach będzie się zmniejszać o tyle, ile miejsca zajmuje jedna liczba w tablicy, tj. number_of_segments
+        ; w r9 jest aktualny rozmiar tablicy w bajtach, w kolejnych iteracjach będzie się zmniejszać o tyle, ile miejsca zajmuje jedna liczba w tablicy
 
-        ; w r11 jest aktualnie number_of_segments, więc 8 * r11 jest wartością, o którą trzeba przesunąć wskaźnik, by dostać się do kolejnej liczby w tablicy
+        ; w r11 jest aktualnie liczba segmentów, z której składa się liczba, więc 8 * r11 jest wartością, o którą trzeba przesunąć wskaźnik, by dostać się do kolejnej liczby w tablicy
         lea     r10, [r9 + 8 * r11]
 
         mov     rsi, -1 ; w rsi będzie trzymany wynikowy stopień wielomianu
@@ -84,7 +86,7 @@ move_array_next_step: ; przesuwamy wskaźniki do następnych pozycji i powtarzam
 
 subtract:
         push    rcx
-        mov     rcx, [rel number_of_segments] ; dla dwóch liczb trzeba odjąć wszystkie odpowiadające segmenty, z których się składają
+        mov     rcx, r11 ; dla dwóch liczb trzeba odjąć wszystkie odpowiadające segmenty, z których się składają
         clc ; nie interesuje nas flaga przeniesienia z poprzedniej operacji arytmetycznej
 
 subtract_two:
@@ -110,7 +112,7 @@ check_zeros_array: ; sprawdza w pętli, czy tablica składa się z samych zer
         jmp     end
 
 non_zero: ; tablica zawiera niezerowy element, trzeba odjąć sąsiednie liczby w tablicy
-        sub     r9, [rel number_of_segments] ; liczba segmentów w wynikowej tablicy zmniejszy się o number_of_segments
+        sub     r9, r11 ; liczba segmentów w wynikowej tablicy zmniejszy się o liczbę segmentów odpowiadających jednej liczbie
         sub     rdi, 1 ; rozmiar wynikowej tablicy po odejmowaniu zmniejszy się o jeden
 
         mov     rcx, rdi ; będzie potrzeba wykonać rdi odejmowań liczb
@@ -126,5 +128,5 @@ non_zero: ; tablica zawiera niezerowy element, trzeba odjąć sąsiednie liczby 
 end:
         mov     rax, rsi ; przenosimy wynik do rax
 
-        add     rsp, [rel array_size_bites] ; zwalniamy stos
+        add     rsp, r8 ; zwalniamy stos
         ret
